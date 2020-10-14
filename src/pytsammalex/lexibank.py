@@ -6,8 +6,8 @@ from pytsammalex.gbif import GBIF
 try:
     import pylexibank
 except ImportError:
-    import mock
-    pylexibank = mock.Mock()
+    from unittest import mock
+    pylexibank = mock.Mock(Concept=mock.Mock)
 
 
 @attr.s

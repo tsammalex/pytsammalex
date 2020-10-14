@@ -2,6 +2,9 @@ import pathlib
 import functools
 import itertools
 
+from clldutils import jsonlib
+
+import pytsammalex
 from pytsammalex.gbif import GBIF
 
 
@@ -38,8 +41,15 @@ def get_center(arr):
         lambda x, y: [x[0] + y[0] / len(arr), x[1] + y[1] / len(arr)], arr, [0.0, 0.0])
 
 
-def load_ecoregions(data):
-    ecoregions = load(pathlib.Path(plansa.__file__).parent / 'static' / 'ecoregions.json')['features']
+def load_ecoregions(data, filter=None):
+    """
+
+    :param data:
+    :param filter:
+    :return:
+    """
+    ecoregions = jsonlib.load(
+        pathlib.Path(pytsammalex.__file__).parent / 'ecoregions.json')['features']
 
     biome_map = {
         1: ('Tropical & Subtropical Moist Broadleaf Forests', '008001'),
@@ -61,13 +71,18 @@ def load_ecoregions(data):
     for eco_code, features in itertools.groupby(
             sorted(ecoregions, key=lambda e: e['properties']['eco_code']),
             key=lambda e: e['properties']['eco_code']):
+        features = list(features)
+        props = features[0]['properties']
+        if filter and not filter(eco_code, props):
+            continue
+
         #if not eco_code.startswith('NT'):
         if not eco_code.startswith('AT'):
             continue
-        features = list(features)
-        props = features[0]['properties']
+
         if int(props['BIOME']) not in biome_map:
             continue
+
         biome = data['Biome'].get(props['BIOME'])
         if not biome:
             name, color = biome_map[int(props['BIOME'])]

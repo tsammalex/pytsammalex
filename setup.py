@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 
 setup(
-    name='pyacc',
+    name='pytsammalex',
     version='0.1.1.dev0',
     author='Robert Forkel',
     author_email='forkel@shh.mpg.de',
@@ -11,7 +11,7 @@ setup(
     long_description_content_type='text/markdown',
     keywords='',
     license='Apache 2.0',
-    url='https://github.com/atlas-comp-cog/pyacc',
+    url='https://github.com/tsammalex/pytsammalex',
     packages=find_packages(where='src'),
     package_dir={'': 'src'},
     include_package_data=True,
