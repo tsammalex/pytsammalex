@@ -12,8 +12,8 @@ except ImportError:
     sa = mock.Mock()
     orm = mock.Mock()
     interfaces = mock.Mock()
-    class _TMP1(mock.Mock): pass
-    class _TMP2(mock.Mock): pass
+    class _TMP1(mock.Mock): pass  # noqa: E301, E701
+    class _TMP2(mock.Mock): pass  # noqa: E301, E701
     meta = mock.Mock(Base=_TMP1)
     common = mock.Mock(IdNameDescriptionMixin=_TMP2)
 

@@ -3,37 +3,56 @@ import functools
 import itertools
 
 from clldutils import jsonlib
+from clldutils.misc import nfilter
+import pycldf
 
 import pytsammalex
 from pytsammalex.gbif import GBIF
+from pytsammalex.clld.models import TaxonMixin, Biome, Ecoregion
+
+try:
+    from clld.cliutil import Data
+except ImportError:
+    Data = None
 
 
-#
-# FIXME: load multiple datasets!
-#
+def iter_datasets(default_dir, filter=None, exclude=('bin', 'lib', 'share', 'include', 'man')):
+    d = input('Directory containing the datasets [{}]:'.format(default_dir)) or default_dir
+    for dd in pathlib.Path(d).iterdir():
+        if dd.is_dir() and dd.name in exclude:
+            continue
+        for ds in pycldf.iter_datasets(dd):
+            if (filter is None) or filter(ds):
+                yield ds
 
-def load_taxa(cldf, language_tags):
-    seen = {}
+
+def iter_taxa(cldf, language_tags, seen=None, enrich=False):
+    """
+    Iterate over a datasets' taxa, yielding a `dict` of taxon data for each `GBIF_ID` not yet in
+    `seen`.
+
+    :param cldf: `pycldf.Dataset` instance.
+    :param language_tags: A `set` of ISO 639-2 language tags for which to retrieve vernacular \
+    names for the taxon from GBIF.
+    :param seen: `set` of already encountered `GBIF_ID`s
+    :return: Generator of triples (parameter `dict`, vernacular names `dict`, taxon data `dict`).
+    """
+    seen = set() if seen is None else seen
     for param in cldf.iter_rows('ParameterTable', 'id', 'concepticonReference', 'name'):
         if (not param['GBIF_ID']) or param['GBIF_ID'] == '-':
             continue
-        p = seen.get(param['GBIF_ID'])
-        if p:
-            data['Taxon'][param['id']] = p
-        else:
-            vnames = GBIF().get_vernacular_names(param['GBIF_ID'], param['rank'], language_tags=language_tags)
-            seen[param['GBIF_ID']] = data.add(
-                models.Taxon,
-                param['id'],
-                id=param['GBIF_ID'],
-                name=param['canonicalName'],
-                description=param['GBIF_NAME'],
-                name_english=vnames.get('eng'),
-                name_spanish=vnames.get('spa'),
-                name_portuguese=vnames.get('por'),
-                **{k: int(v or 0) if k.endswith('Key') else v
-                   for k, v in param.items() if any(k.startswith(s) for s in 'kingdom phylum class order genus family'.split())},
-            )
+        if param['GBIF_ID'] in seen:
+            continue
+
+        seen.add(param['GBIF_ID'])
+        vnames = GBIF().get_vernacular_names(
+            param['GBIF_ID'], param['rank'], language_tags=language_tags)
+        taxon = {k: param.get(k) for k in dir(TaxonMixin) if not k.startswith('_')}
+        if any(v is None for v in taxon.values()) and enrich:
+            gbif_data = GBIF().usage(key=param['GBIF_ID'])
+            taxon.update({k: gbif_data.get(k.replace('_', '')) for k in taxon})
+
+        yield param, vnames, taxon
 
 
 def get_center(arr):
@@ -41,7 +60,7 @@ def get_center(arr):
         lambda x, y: [x[0] + y[0] / len(arr), x[1] + y[1] / len(arr)], arr, [0.0, 0.0])
 
 
-def load_ecoregions(data, filter=None):
+def load_ecoregions(filter=None):
     """
 
     :param data:
@@ -68,16 +87,13 @@ def load_ecoregions(data, filter=None):
         14: ('Mangroves', '870083'),
     }
 
+    data = Data()
     for eco_code, features in itertools.groupby(
             sorted(ecoregions, key=lambda e: e['properties']['eco_code']),
             key=lambda e: e['properties']['eco_code']):
         features = list(features)
         props = features[0]['properties']
         if filter and not filter(eco_code, props):
-            continue
-
-        #if not eco_code.startswith('NT'):
-        if not eco_code.startswith('AT'):
             continue
 
         if int(props['BIOME']) not in biome_map:

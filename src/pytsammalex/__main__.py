@@ -1,7 +1,7 @@
 import sys
 import contextlib
 
-from clldutils.clilib import register_subcommands, get_parser_and_subparsers, ParserError, PathType
+from clldutils.clilib import register_subcommands, get_parser_and_subparsers, ParserError
 from clldutils.loglib import Logging
 
 import pytsammalex.commands

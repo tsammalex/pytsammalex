@@ -9,6 +9,8 @@ except ImportError:
     from unittest import mock
     pylexibank = mock.Mock(Concept=mock.Mock)
 
+__all__ = ['Taxon', 'Dataset']
+
 
 @attr.s
 class Taxon(pylexibank.Concept):

@@ -23,12 +23,6 @@ def register(parser):
     parser.add_argument('query')
     add_format(parser, default='simple')
 
-#
-# sqlite: table query
-# - service
-# - query (a json dict)
-# - result (as json)
-#
 
 def run(args):
     res = GBIF()(args.service, q=args.query)

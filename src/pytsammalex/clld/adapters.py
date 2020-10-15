@@ -3,13 +3,12 @@ try:
 except ImportError:
     GeoJson = object
 
+ECOREGIONS_TITLE = "WWF's Terrestrial Ecoregions"
+
 
 class GeoJsonEcoregions(GeoJson):
-    #
-    # FIXME: make name configurable!
-    #
     def featurecollection_properties(self, ctx, req):
-        return {'name': "WWF's Terrestrial Ecoregions of the Afrotropics"}
+        return {'name': ECOREGIONS_TITLE}
 
     def get_features(self, ctx, req):
         for ecoregion in ctx.get_query():

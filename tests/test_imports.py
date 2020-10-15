@@ -1,6 +1,8 @@
-from pytsammalex import clld
-from pytsammalex import lexibank
+import pytest
 
 
+@pytest.mark.bare
 def test_import():
-    pass
+    from pytsammalex import clld
+    from pytsammalex import lexibank
+    assert clld and lexibank
