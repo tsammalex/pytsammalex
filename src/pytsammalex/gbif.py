@@ -80,7 +80,7 @@ class GBIF:
                     langs.remove(tag)  # We take the first matching name, then clear the tag.
 
         _get_names(key)
-        if langs and (rank.lower() == 'subspecies'):
+        if langs and rank and (rank.lower() == 'subspecies'):
             # For subspecies we try to supplement names for the species.
             _get_names(self.usage(key=key)['speciesKey'])
         return names
