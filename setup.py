@@ -17,8 +17,8 @@ setup(
     include_package_data=True,
     zip_safe=False,
     entry_points={
-        'console_scripts': [
-            'tsammalex=pytsammalex.__main__:main',
+        'cldfbench.commands': [
+            'tsammalex=pytsammalex.commands',
         ],
     },
     platforms='any',
@@ -26,8 +26,8 @@ setup(
     install_requires=[
         'appdirs',
         'pygbif',
+        'clldutils>=3.19',
         'csvw>=1.5.6',
-        'clldutils>=3.5',
         'attrs',
         'nameparser',
         'requests',

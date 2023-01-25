@@ -9,6 +9,22 @@ from appdirs import user_cache_dir
 
 import pytsammalex
 
+__all__ = ['RANKS', 'GBIF']
+
+RANKS = [
+    'KINGDOM',
+    'PHYLUM',
+    'CLASS',
+    'ORDER',
+    'FAMILY',
+    'GENUS',
+    'SPECIES',
+    'SUBSPECIES',
+    'VARIETY',
+    'FORM',
+    None,
+]
+
 
 class Cache:
     def __init__(self):
@@ -68,19 +84,20 @@ class GBIF:
     def usage(self, **kw):
         return self('usage', **kw)
 
-    def get_vernacular_names(self, key, rank='species', language_tags=None):
+    def get_vernacular_names(self, key, rank='species', language_tags=['eng']):
         langs = set(tag for tag in language_tags or [])
         names = {k: None for k in langs}
 
         def _get_names(k):
             for res in self.usage(key=k, data='vernacularNames')['results']:
                 tag = res.get('language')
-                if tag in langs:
+                if (tag in langs) or language_tags is None:
                     names[tag] = res['vernacularName']
-                    langs.remove(tag)  # We take the first matching name, then clear the tag.
+                    if tag in langs:
+                        langs.remove(tag)  # We take the first matching name, then clear the tag.
 
         _get_names(key)
         if langs and rank and (rank.lower() == 'subspecies'):
             # For subspecies we try to supplement names for the species.
             _get_names(self.usage(key=key)['speciesKey'])
-        return names
+        return {k: v for k, v in names.items() if v}

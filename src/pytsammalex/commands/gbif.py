@@ -11,7 +11,13 @@ $ tsammalex gbif lookup "Pantera leo"
   5219404  Panthera leo (Linnaeus, 1758)  SPECIES  ACCEPTED
 
 If you are certain about the spelling, try "suggest" - which is quicker.
+
+
+https://www.gbif.org/tools/species-lookup
+
 """
+import json
+
 from clldutils.clilib import Table, add_format
 
 from pytsammalex.gbif import GBIF
@@ -25,16 +31,20 @@ def register(parser):
 
 
 def run(args):
-    res = GBIF()(args.service, q=args.query)
+    kw = {'key' if args.service == 'usage' else 'q': args.query}
+    res = GBIF()(args.service, **kw)
     if args.service == 'suggest':
         cols = ['key', 'scientificName', 'rank', 'status']
         with Table(args, *cols) as table:
             for row in res:
                 if not row['synonym']:
                     table.append([row.get(col) for col in cols])
-    else:
+    elif args.service == 'lookup':
         cols = ['key', 'scientificName', 'rank', 'taxonomicStatus']
         with Table(args, *cols) as table:
             for row in res['results']:
-                if not row['synonym'] and 'nubKey' not in row and 'kingdom' in row:
+                if 1:#not row['synonym'] and 'nubKey' not in row and 'kingdom' in row:
                     table.append([row.get(col) for col in cols])
+    elif args.service == 'usage':
+        print(json.dumps(res, indent=4))
+

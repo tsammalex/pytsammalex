@@ -14,7 +14,12 @@ __all__ = ['Taxon', 'Dataset']
 
 @attr.s
 class Taxon(pylexibank.Concept):
-    GBIF_ID = attr.ib(default=None)
+    GBIF_ID = attr.ib(
+        default=None,
+        metadata={
+            'valueUrl': 'https://www.gbif.org/species/{GBIF_ID}',
+            'propertyUrl': 'http://cldf.clld.org/v1.0/terms.rdf#gbifReference'}
+    )
     GBIF_NAME = attr.ib(default=None)
     canonicalName = attr.ib(default=None)
     rank = attr.ib(default=None)
@@ -53,17 +58,15 @@ class Dataset(pylexibank.Dataset):
 
     @staticmethod
     def add_image_schema(writer):
-        writer.cldf.add_table(
-            'images.csv',
+        writer.cldf.add_component(
+            'MediaTable',
             {
-                'name': 'ID',
-                'propertyUrl': 'http://cldf.clld.org/v1.0/terms.rdf#id',
+                "name": "Taxon_ID",
+                "propertyUrl": "http://cldf.clld.org/v1.0/terms.rdf#parameterReference",
             },
-            'Taxon_ID',
             'objid',
             'bitstreamid',
             {"name": "tags", "separator": ";"},
-            'mime_type',
             'creator',
             'date',
             'place',
@@ -71,6 +74,6 @@ class Dataset(pylexibank.Dataset):
             'source',
             'Comment',
         )
-        writer.cldf['images.csv', 'ID'].valueUrl = URITemplate(
-            'https://cdstar.shh.mpg.de/bitstreams/{objid}/{bitstreamid}')
-        writer.cldf.add_foreign_key('images.csv', 'Taxon_ID', 'ParameterTable', 'ID')
+        writer.cldf['MediaTable', 'ID'].valueUrl = URITemplate(
+            'https://cdstar.eva.mpg.de/bitstreams/{objid}/{bitstreamid}')
+        writer.cldf.remove_columns('MediaTable', 'Download_URL')
